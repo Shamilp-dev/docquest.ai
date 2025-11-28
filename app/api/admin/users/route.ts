@@ -3,6 +3,10 @@ import { requireAdmin } from '@/lib/auth';
 import User from '@/lib/models/user';
 import dbConnect from '@/lib/mongoose';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // Get all users (admin only)
 export async function GET() {
   try {

@@ -8,6 +8,10 @@ import { SearchResultDocument } from "@/types/DocumentTypes";
 import OpenAI from "openai";
 import { requireAuth } from "@/lib/auth";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 const client = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY!,
   baseURL: "https://openrouter.ai/api/v1",

@@ -4,6 +4,10 @@ import Chat from '@/lib/models/chat';
 import dbConnect from '@/lib/mongoose';
 import { ObjectId } from 'mongodb';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // Get user's chat
 export async function GET() {
   try {

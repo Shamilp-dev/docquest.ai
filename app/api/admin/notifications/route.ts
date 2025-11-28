@@ -4,6 +4,10 @@ import Chat from '@/lib/models/chat';
 import User from '@/lib/models/user';
 import dbConnect from '@/lib/mongoose';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET() {
   try {
     await requireAdmin();

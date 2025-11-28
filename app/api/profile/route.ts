@@ -3,6 +3,10 @@ import { requireAuth, setAuthCookie } from '@/lib/auth';
 import User from '@/lib/models/user';
 import dbConnect from '@/lib/mongoose';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function PUT(req: Request) {
   try {
     const user = await requireAuth();

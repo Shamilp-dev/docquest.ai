@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { requireAuth } from "@/lib/auth";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(req: Request) {
   try {
     // Get authenticated user

@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { generateEmbedding } from "../utils/generateEmbedding";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(req: Request) {
   try {
     const { query } = await req.json();

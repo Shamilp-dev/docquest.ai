@@ -3,6 +3,10 @@ import { requireAdmin } from '@/lib/auth';
 import Chat from '@/lib/models/chat';
 import dbConnect from '@/lib/mongoose';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(req: NextRequest) {
   try {
     await requireAdmin();

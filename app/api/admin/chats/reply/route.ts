@@ -4,6 +4,10 @@ import Chat from '@/lib/models/chat';
 import dbConnect from '@/lib/mongoose';
 import mongoose from 'mongoose';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(req: NextRequest) {
   try {
     await requireAdmin();

@@ -4,6 +4,10 @@ import User from '@/lib/models/user';
 import dbConnect from '@/lib/mongoose';
 import { MongoClient } from 'mongodb';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // Delete user (admin only)
 export async function DELETE(
   req: Request,
