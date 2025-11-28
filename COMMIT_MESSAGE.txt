@@ -1,0 +1,55 @@
+feat: implement MongoDB GridFS for Vercel serverless compatibility
+
+BREAKING CHANGE: File storage migrated from filesystem to MongoDB GridFS
+
+## Changes
+
+### Core Implementation
+- Add GridFS connection helper (lib/gridfs.ts)
+- Update upload route to use GridFS instead of filesystem
+- Add download route to stream files from GridFS
+- Enhance delete route to remove files from both DB and GridFS
+- Add proper authentication checks for all routes
+
+### Database Schema
+- Add gridfsId field to documents collection
+- Files now stored in uploads.files and uploads.chunks (GridFS)
+
+### Benefits
+- ✅ Vercel serverless compatible (no filesystem required)
+- ✅ Scalable storage through MongoDB Atlas
+- ✅ Automatic file chunking for large files
+- ✅ Geographic distribution via MongoDB replicas
+- ✅ Built-in backup and recovery
+
+### Documentation
+- Add GRIDFS_SETUP.md for technical documentation
+- Add DEPLOYMENT_CHECKLIST.md for deployment guide
+- Add GRIDFS_MIGRATION.md for migration overview
+- Add README_GRIDFS.md for quick start guide
+- Add test and deploy scripts
+
+### Testing
+- Add scripts/test-gridfs.sh for testing setup
+- Add scripts/deploy.sh for quick deployment
+
+## Migration Notes
+
+Existing files in uploads/ folder will need to be re-uploaded through
+the new API. The GridFS system will handle all new uploads automatically.
+
+## Environment Variables Required
+
+- MONGODB_URI (existing)
+- OPENAI_API_KEY (existing)
+- NEXTAUTH_SECRET (existing)
+- NEXTAUTH_URL (set to production URL)
+
+## Deployment Instructions
+
+1. Set environment variables in Vercel dashboard
+2. Push this commit to trigger deployment
+3. Test upload/download functionality
+4. Verify files appear in MongoDB Atlas GridFS collections
+
+Closes #[issue-number] (if applicable)

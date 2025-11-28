@@ -1,87 +1,84 @@
-import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
-import clientPromise from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
-import path from 'path';
-import { readFile } from 'fs/promises';
-import fs from 'fs';
+import { NextResponse } from "next/server";
+import { getGridFS } from "@/lib/gridfs";
+import { ObjectId } from "mongodb";
+import { requireAuth } from "@/lib/auth";
+import clientPromise from "@/lib/mongodb";
+
+export const runtime = "nodejs";
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   req: Request,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    // Authenticate user
+    // Get authenticated user
     const user = await requireAuth();
-    
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({
+        success: false,
+        error: "Unauthorized - Please log in"
+      }, { status: 401 });
     }
 
-    // Await params in Next.js 16
-    const { id } = await context.params;
-
-    if (!id) {
-      return NextResponse.json({ error: 'Document ID is required' }, { status: 400 });
-    }
-
-    // Connect to MongoDB
-    if (!clientPromise) {
-      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
-    }
-    
+    // Get document metadata to find gridfsId
     const client = await clientPromise;
-    const db = client.db('knowledgehub');
-    const documentsCollection = db.collection('documents');
-
-    // Find the document
-    const document = await documentsCollection.findOne({
-      _id: new ObjectId(id),
-      userId: user.id
+    const db = client.db("knowledgehub");
+    
+    const document = await db.collection("documents").findOne({
+      _id: new ObjectId(params.id),
+      deleted: false
     });
 
     if (!document) {
-      return NextResponse.json({ error: 'Document not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Document not found" },
+        { status: 404 }
+      );
     }
 
-    // Get file path
-    const uploadDir = path.join(process.cwd(), 'uploads');
-    const filePath = path.join(uploadDir, document.filename);
-
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-      return NextResponse.json({ error: 'File not found on server' }, { status: 404 });
+    // Check if user has access to this document
+    if (document.userId !== user.id && user.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, error: "Access denied" },
+        { status: 403 }
+      );
     }
 
-    // Read file
-    const fileBuffer = await readFile(filePath);
+    // Get file from GridFS
+    const { bucket } = await getGridFS();
+    const gridfsId = new ObjectId(document.gridfsId);
 
-    // Determine content type based on file extension
-    const ext = document.filename.split('.').pop()?.toLowerCase();
-    const contentTypeMap: Record<string, string> = {
-      pdf: 'application/pdf',
-      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      txt: 'text/plain',
-      jpg: 'image/jpeg',
-      jpeg: 'image/jpeg',
-      png: 'image/png',
-      webp: 'image/webp'
-    };
+    // Get file info
+    const files = await bucket.find({ _id: gridfsId }).toArray();
+    if (files.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "File not found in storage" },
+        { status: 404 }
+      );
+    }
 
-    const contentType = contentTypeMap[ext || ''] || 'application/octet-stream';
+    const fileInfo = files[0];
+    const downloadStream = bucket.openDownloadStream(gridfsId);
 
-    // Return file as response
-    return new NextResponse(fileBuffer, {
+    // Convert stream to buffer
+    const chunks: Buffer[] = [];
+    for await (const chunk of downloadStream) {
+      chunks.push(chunk);
+    }
+    const buffer = Buffer.concat(chunks);
+
+    return new Response(buffer, {
       headers: {
-        'Content-Type': contentType,
-        'Content-Disposition': `inline; filename="${document.filename}"`,
+        "Content-Type": fileInfo.contentType || "application/octet-stream",
+        "Content-Disposition": `attachment; filename="${document.filename}"`,
+        "Content-Length": buffer.length.toString(),
       },
     });
-
-  } catch (error: any) {
-    console.error('Download error:', error);
+  } catch (err: any) {
+    console.error("Download error:", err);
     return NextResponse.json(
-      { error: error.message || 'Failed to download document' },
+      { success: false, error: "Download failed", details: err.message },
       { status: 500 }
     );
   }

@@ -1,339 +1,181 @@
-# ✅ Deployment Checklist
+# ✅ GridFS Deployment Checklist
 
-Use this checklist to ensure smooth deployment to Vercel.
-
-## 📋 Pre-Deployment
-
-### Code Preparation
-- [ ] All features tested locally
-- [ ] No console errors in browser
-- [ ] All environment variables documented
-- [ ] Git repository initialized
-- [ ] Code committed to GitHub
-- [ ] `.env.local` added to `.gitignore`
-
-### Dependencies
-- [ ] All npm packages installed
-- [ ] `package.json` has all dependencies
-- [ ] No broken imports
-- [ ] Build succeeds locally (`npm run build`)
+Print this out and check off each item as you complete it!
 
 ---
 
-## 🗄️ MongoDB Atlas Setup
+## 📋 PRE-DEPLOYMENT
 
-### Account & Cluster
-- [ ] MongoDB Atlas account created
-- [ ] Free tier (M0) cluster created
-- [ ] Cluster is running (green status)
-- [ ] Region selected (closest to users)
-
-### Security Configuration
-- [ ] Database user created
-- [ ] Strong password saved securely
-- [ ] User has "Read and write" permissions
-- [ ] Network access set to 0.0.0.0/0 (Allow from anywhere)
-- [ ] IP whitelist confirmed
-
-### Connection
-- [ ] Connection string copied
-- [ ] Password replaced in connection string
-- [ ] Database name set to `knowledgehub`
-- [ ] Connection tested locally
-- [ ] Format: `mongodb+srv://user:pass@cluster.mongodb.net/knowledgehub`
-
----
-
-## 🔑 API Keys & Secrets
-
-### OpenAI
-- [ ] OpenAI account created
-- [ ] API key generated at platform.openai.com
-- [ ] API key tested locally
-- [ ] Billing set up (pay-as-you-go)
-- [ ] Usage limits configured (optional)
-
-### JWT Secret
-- [ ] JWT secret generated (`openssl rand -base64 32`)
-- [ ] Secret is at least 32 characters
-- [ ] Secret saved securely
-
-### Environment Variables Ready
-```env
-MONGODB_URI=mongodb+srv://...
-OPENAI_API_KEY=sk-proj-...
-JWT_SECRET=your-32-char-secret
-NEXT_PUBLIC_URL=https://your-app.vercel.app
-```
-
----
-
-## 🚀 Vercel Deployment
-
-### GitHub Setup
-- [ ] Code pushed to GitHub
-- [ ] Repository is accessible
-- [ ] Main branch is up to date
-- [ ] No sensitive data in repository
-
-### Vercel Project
-- [ ] Vercel account created
-- [ ] GitHub connected to Vercel
-- [ ] Project imported from GitHub
-- [ ] Framework preset set to Next.js
-- [ ] Build command: `npm run build`
-- [ ] Output directory: `.next`
-
-### Environment Variables in Vercel
-- [ ] `MONGODB_URI` added
-- [ ] `OPENAI_API_KEY` added
-- [ ] `JWT_SECRET` added
-- [ ] `NEXT_PUBLIC_URL` added (update after first deploy)
-- [ ] All variables applied to Production
-
-### First Deployment
-- [ ] Deploy button clicked
-- [ ] Build succeeded (check logs)
-- [ ] No build errors
-- [ ] Deployment URL copied
-- [ ] `NEXT_PUBLIC_URL` updated with real URL
-- [ ] Redeployed with correct URL
-
----
-
-## 🔥 Keep-Alive Setup (Critical!)
-
-### UptimeRobot Account
-- [ ] Account created at uptimerobot.com
-- [ ] Email verified
-- [ ] Logged into dashboard
-
-### Monitor Configuration
-- [ ] New monitor created
-- [ ] Monitor type: HTTP(s)
-- [ ] Name: "DocQuest Keep-Alive"
-- [ ] URL: `https://your-app.vercel.app/api/keepalive`
-- [ ] Monitoring interval: 5 minutes
-- [ ] Alert contacts added (optional)
-- [ ] Monitor is active (green)
-
-### Verification
-- [ ] `/api/keepalive` returns 200 OK
-- [ ] Response shows "warm" status
-- [ ] `/api/health` returns 200 OK
-- [ ] UptimeRobot shows successful pings
-- [ ] Monitor uptime is 100%
-
----
-
-## 🧪 Testing Deployment
-
-### Frontend Tests
-- [ ] Homepage loads correctly
-- [ ] Login page works
-- [ ] Registration works
-- [ ] Dashboard displays
-- [ ] UI looks correct (no broken styles)
-- [ ] Images load
-- [ ] Dark mode toggles (if applicable)
-
-### Authentication Tests
-- [ ] Can create new account
-- [ ] Can login with credentials
-- [ ] JWT token is set
-- [ ] Logout works
-- [ ] Protected routes redirect to login
-- [ ] Session persists on refresh
-
-### Backend API Tests
-- [ ] `/api/health` returns OK
-- [ ] `/api/keepalive` returns warm status
-- [ ] `/api/documents` returns data (when logged in)
-- [ ] `/api/analytics` returns statistics
-- [ ] `/api/auth/login` works
-- [ ] `/api/auth/register` works
-
-### Core Features
-- [ ] File upload works (PDF)
-- [ ] File upload works (DOCX)
-- [ ] File upload works (TXT)
-- [ ] File upload works (Images with OCR)
-- [ ] Search returns results
-- [ ] Document details display
-- [ ] Document deletion works
-- [ ] Deleted files section works
-
-### Performance Tests
-- [ ] Page load < 1 second
-- [ ] API responses < 500ms
-- [ ] File upload completes successfully
-- [ ] No timeout errors
-- [ ] No cold start delays (with UptimeRobot)
-
----
-
-## 📊 Monitoring Setup
-
-### Vercel Dashboard
-- [ ] Analytics enabled
-- [ ] Function logs accessible
-- [ ] Error tracking reviewed
-- [ ] Deployment history visible
-
-### UptimeRobot Dashboard
-- [ ] Monitor status is green
-- [ ] Uptime percentage visible
-- [ ] Response time tracked
-- [ ] Alert settings configured
-
-### Optional Monitoring
-- [ ] Sentry for error tracking (optional)
-- [ ] Google Analytics (optional)
-- [ ] Custom analytics dashboard (optional)
-
----
-
-## 🔒 Security Checklist
-
-### Environment Variables
-- [ ] No secrets in code
-- [ ] `.env.local` in `.gitignore`
-- [ ] All secrets in Vercel dashboard
-- [ ] Environment variables not exposed to client
-
-### Database Security
-- [ ] MongoDB user has minimal required permissions
-- [ ] Strong password used
-- [ ] IP whitelist configured correctly
-- [ ] No default credentials used
-
-### Application Security
-- [ ] JWT secret is strong (32+ chars)
-- [ ] Passwords are hashed
-- [ ] HTTPS enabled (automatic on Vercel)
-- [ ] CORS configured properly
-- [ ] Rate limiting considered
-
----
-
-## 📈 Performance Optimization
-
-### Vercel Optimization
-- [ ] Edge functions enabled
-- [ ] Image optimization enabled (Next.js)
-- [ ] Static assets cached
-- [ ] Compression enabled (automatic)
-
-### Database Optimization
-- [ ] MongoDB indexes created:
-  - [ ] Index on `userId`
-  - [ ] Index on `deleted`
-  - [ ] Index on `createdAt`
-- [ ] Queries optimized
-- [ ] Connection pooling configured
-
-### Code Optimization
-- [ ] Large dependencies reviewed
-- [ ] Unused code removed
-- [ ] Images optimized
-- [ ] Bundle size checked
-
----
-
-## 🎯 Post-Deployment
+### Code Implementation
+- [x] GridFS helper created (`lib/gridfs.ts`)
+- [x] Upload route updated for GridFS
+- [x] Download route created
+- [x] Delete route enhanced for GridFS
+- [x] All routes have proper exports
 
 ### Documentation
-- [ ] Deployment URL documented
-- [ ] Environment variables documented
-- [ ] API endpoints documented
-- [ ] Admin credentials saved securely
-
-### User Communication
-- [ ] Users informed of new URL
-- [ ] Migration guide created (if applicable)
-- [ ] Support channels set up
-- [ ] Feedback mechanism in place
-
-### Ongoing Maintenance
-- [ ] Monitor UptimeRobot weekly
-- [ ] Check Vercel function logs
-- [ ] Review MongoDB usage
-- [ ] Monitor OpenAI API costs
-- [ ] Update dependencies monthly
+- [x] README_GRIDFS.md created
+- [x] GRIDFS_SETUP.md created
+- [x] DEPLOYMENT_CHECKLIST.md created
+- [x] ARCHITECTURE.md created
+- [x] Scripts created and tested
 
 ---
 
-## ⚠️ Troubleshooting
+## 🧪 LOCAL TESTING
 
-If something goes wrong, check:
+### Environment Setup
+- [ ] `.env.local` file exists
+- [ ] `MONGODB_URI` is set
+- [ ] `OPENAI_API_KEY` is set
+- [ ] `NEXTAUTH_SECRET` is set
+
+### Build Test
+- [ ] Run `npm install` (if needed)
+- [ ] Run `npm run build` successfully
+- [ ] No errors in build output
+
+### Local Dev Test
+- [ ] Run `npm run dev`
+- [ ] Can access http://localhost:3000
+- [ ] Can log in to application
+- [ ] Upload test file succeeds
+- [ ] File appears in documents list
+- [ ] Download file works
+- [ ] Check MongoDB Atlas for `uploads.files` collection
+
+---
+
+## 🚀 VERCEL DEPLOYMENT
+
+### Environment Variables
+Go to: Vercel Dashboard → Your Project → Settings → Environment Variables
+
+- [ ] `MONGODB_URI` added
+  - Format: `mongodb+srv://username:password@cluster.mongodb.net/knowledgehub`
+- [ ] `OPENAI_API_KEY` added
+  - Format: `sk-...`
+- [ ] `NEXTAUTH_SECRET` added
+  - Use same value from `.env.local`
+- [ ] `NEXTAUTH_URL` added
+  - Format: `https://your-app.vercel.app`
+
+For each variable:
+- [ ] Check ✅ Production
+- [ ] Check ✅ Preview
+- [ ] Check ✅ Development
+
+### MongoDB Atlas Configuration
+- [ ] Cluster is running
+- [ ] Database user has readWrite permissions
+- [ ] Network Access allows 0.0.0.0/0 (or Vercel IPs)
+- [ ] Connection string is correct
+
+### Git & Deploy
+- [ ] All files staged: `git add .`
+- [ ] Committed with message: `git commit -F COMMIT_MESSAGE.txt`
+- [ ] Pushed to repository: `git push`
+- [ ] Vercel deployment started automatically
+
+---
+
+## 🔍 POST-DEPLOYMENT VERIFICATION
+
+### Build Check
+- [ ] Vercel build succeeded (no errors)
+- [ ] Check deployment logs for warnings
+- [ ] Function sizes are within limits
+
+### Functionality Test
+- [ ] Visit production URL
+- [ ] Can log in successfully
+- [ ] Upload a test file
+  - [ ] Small file (< 1MB)
+  - [ ] Medium file (1-5MB)
+  - [ ] Large file (5-50MB)
+- [ ] Files appear in documents list
+- [ ] Download files successfully
+- [ ] Delete works (soft delete)
+- [ ] Permanent delete works (if implemented)
+
+### Database Verification
+In MongoDB Atlas Dashboard:
+
+- [ ] Collection `uploads.files` exists
+- [ ] Collection `uploads.chunks` exists
+- [ ] Documents in `documents` collection have `gridfsId` field
+- [ ] File metadata looks correct in `uploads.files`
+
+### Log Verification
+- [ ] No "ENOENT" errors in Vercel logs
+- [ ] No filesystem-related errors
+- [ ] No MongoDB connection errors
+- [ ] Upload logs show "File uploaded to GridFS"
+
+---
+
+## 🐛 TROUBLESHOOTING
+
+If something doesn't work, check:
 
 ### Build Failures
-- [ ] Check Vercel build logs
-- [ ] Verify all dependencies in package.json
-- [ ] Test build locally: `npm run build`
-- [ ] Check for TypeScript errors
+- [ ] All environment variables are set in Vercel
+- [ ] MONGODB_URI format is correct
+- [ ] No syntax errors in code
 
-### Runtime Errors
-- [ ] Check Vercel function logs
-- [ ] Verify environment variables
-- [ ] Test API endpoints individually
-- [ ] Check MongoDB connection
+### Upload Failures
+- [ ] MongoDB Atlas allows connections from 0.0.0.0/0
+- [ ] Database user has correct permissions
+- [ ] MONGODB_URI is correct and accessible
+- [ ] File size is under 50MB limit
+
+### Download Failures
+- [ ] Document has `gridfsId` field
+- [ ] User is authenticated
+- [ ] File exists in GridFS (`uploads.files`)
 
 ### Performance Issues
-- [ ] Verify UptimeRobot is running
-- [ ] Check function execution time
-- [ ] Review MongoDB query performance
-- [ ] Check OpenAI API response times
-
-### Database Issues
-- [ ] Verify connection string
-- [ ] Check IP whitelist
-- [ ] Verify user permissions
-- [ ] Test connection from Vercel
+- [ ] Check Vercel function execution time
+- [ ] Verify file sizes are reasonable
+- [ ] Check MongoDB Atlas performance metrics
 
 ---
 
-## 🎉 Success Criteria
+## ✨ SUCCESS INDICATORS
 
-Your deployment is successful when:
+You know it's working when:
 
-- ✅ Application loads in < 1 second
-- ✅ All features work correctly
-- ✅ No console errors
-- ✅ API responses < 500ms
-- ✅ UptimeRobot shows 100% uptime
-- ✅ No cold starts experienced
-- ✅ File uploads work smoothly
-- ✅ Search returns accurate results
-- ✅ Authentication flows correctly
-- ✅ Mobile responsive
+- ✅ Upload returns `{ success: true, file: { gridfsId: "..." } }`
+- ✅ Files appear in MongoDB `uploads.files` collection
+- ✅ Download streams file correctly
+- ✅ No filesystem errors in logs
+- ✅ Users can upload, view, and download files
 
 ---
 
-## 📞 Support Resources
+## 📞 SUPPORT
 
 If you need help:
 
-- **Vercel Docs**: https://vercel.com/docs
-- **MongoDB Atlas Docs**: https://docs.atlas.mongodb.com
-- **Next.js Docs**: https://nextjs.org/docs
-- **OpenAI API Docs**: https://platform.openai.com/docs
-- **UptimeRobot Support**: https://uptimerobot.com/support
+1. Check [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md) troubleshooting
+2. Review Vercel logs: `vercel logs`
+3. Check MongoDB Atlas logs
+4. Verify environment variables match `.env.local`
 
 ---
 
-## 🚀 You're Ready!
+## 🎉 COMPLETION
 
-Once all items are checked, your DocQuest app is:
-- ⚡ Production-ready
-- 🔥 Optimized for performance
-- 💰 Cost-effective
-- 🌍 Globally distributed
-- 🔒 Secure
+- [ ] All tests pass
+- [ ] Production is live
+- [ ] Users can upload/download files
+- [ ] No errors in logs
+- [ ] Documentation is updated
 
-**Congratulations on your deployment! 🎉**
+**Congratulations! Your app is now serverless-ready! 🚀**
 
 ---
 
-**Last Updated**: Ready for deployment
-**Next Review**: After first deployment
+Date Completed: _______________
+Deployed By: _______________
+Production URL: _______________

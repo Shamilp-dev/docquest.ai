@@ -1,13 +1,12 @@
-// app/api/upload/route.ts - OPTIMIZED FOR VERCEL
+// app/api/upload/route.ts - GRIDFS VERSION FOR VERCEL
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import mammoth from "mammoth";
-import fs from "fs";
+import { getGridFS } from "@/lib/gridfs";
 import clientPromise from "@/lib/mongodb";
 import { generateEmbedding } from "../utils/generateEmbedding";
 import { extractTextFromImage } from "../utils/extractTextFromImage";
 import { requireAuth } from "@/lib/auth";
+import { ObjectId } from "mongodb";
 
 // File size limit: 50MB
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
@@ -24,6 +23,10 @@ const ALLOWED_TYPES = [
 
 // Maximum execution time (Vercel limit: 10s on Hobby, 15s on Pro)
 const MAX_EXECUTION_TIME = 8000; // 8 seconds to be safe
+
+export const runtime = "nodejs";
+export const dynamic = 'force-dynamic';
+export const maxDuration = 10;
 
 export async function POST(req: Request) {
   const startTime = Date.now();
@@ -68,14 +71,28 @@ export async function POST(req: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Create uploads folder if not exists
-    const uploadDir = path.join(process.cwd(), "uploads");
-    if (!fs.existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-    }
+    // Upload file to GridFS first
+    const { bucket } = await getGridFS();
+    const uploadStream = bucket.openUploadStream(file.name, {
+      contentType: file.type,
+      metadata: {
+        userId: user.id,
+        username: user.username,
+        uploadedAt: new Date()
+      }
+    });
 
-    const filePath = path.join(uploadDir, file.name);
-    await writeFile(filePath, buffer);
+    // Write buffer to GridFS
+    uploadStream.end(buffer);
+    
+    // Wait for upload to complete
+    await new Promise((resolve, reject) => {
+      uploadStream.on('finish', resolve);
+      uploadStream.on('error', reject);
+    });
+
+    const fileId = uploadStream.id;
+    console.log("File uploaded to GridFS with ID:", fileId);
 
     let extractedText = "";
     const fileExtension = file.name.split(".").pop()?.toLowerCase() || "";
@@ -189,6 +206,7 @@ export async function POST(req: Request) {
 
       const document = {
         filename: file.name,
+        gridfsId: fileId.toString(), // Reference to GridFS file
         size: buffer.length,
         type: fileExtension,
         extractedText: extractedText,
@@ -214,8 +232,8 @@ export async function POST(req: Request) {
         message: "File uploaded & processed successfully",
         file: {
           id: result.insertedId.toString(),
+          gridfsId: fileId.toString(),
           name: file.name,
-          url: `/uploads/${file.name}`,
           type: fileExtension,
           size: buffer.length,
           pages: estimatedPages
@@ -263,7 +281,3 @@ export async function POST(req: Request) {
     }, { status: 500 });
   }
 }
-
-// Force dynamic rendering (no caching)
-export const dynamic = 'force-dynamic';
-export const maxDuration = 10; // Maximum duration in seconds (Vercel limit)

@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { requireAuth } from "@/lib/auth";
+import { getGridFS } from "@/lib/gridfs";
+import clientPromise from "@/lib/mongodb";
+
+export const runtime = "nodejs";
+export const dynamic = 'force-dynamic';
 
 // Soft delete - Move to trash
 export async function DELETE(
@@ -19,29 +24,56 @@ export async function DELETE(
 
     const { id } = await context.params;
 
-    const { MongoClient } = await import("mongodb");
-    const uri = process.env.MONGODB_URI || "";
-
-    if (!uri) {
+    if (!ObjectId.isValid(id)) {
       return NextResponse.json(
-        { error: "MongoDB not configured" },
-        { status: 503 }
+        { error: "Invalid document ID" },
+        { status: 400 }
       );
     }
 
-    const client = new MongoClient(uri);
-    await client.connect();
+    const client = await clientPromise;
+    const db = client.db("knowledgehub");
 
-    try {
-      const db = client.db("knowledgehub");
+    // Check if this is a permanent delete (query parameter)
+    const url = new URL(req.url);
+    const permanent = url.searchParams.get('permanent') === 'true';
 
-      if (!ObjectId.isValid(id)) {
+    if (permanent) {
+      // Permanent delete: Remove from both documents collection and GridFS
+      const document = await db
+        .collection("documents")
+        .findOne({ 
+          _id: new ObjectId(id),
+          userId: user.id  // Security: Only delete user's own documents
+        });
+
+      if (!document) {
         return NextResponse.json(
-          { error: "Invalid document ID" },
-          { status: 400 }
+          { error: "Document not found or you don't have permission" },
+          { status: 404 }
         );
       }
 
+      // Delete from GridFS if gridfsId exists
+      if (document.gridfsId) {
+        try {
+          const { bucket } = await getGridFS();
+          await bucket.delete(new ObjectId(document.gridfsId));
+          console.log("Deleted file from GridFS:", document.gridfsId);
+        } catch (gridfsError) {
+          console.error("GridFS delete error:", gridfsError);
+          // Continue even if GridFS delete fails
+        }
+      }
+
+      // Delete document metadata
+      await db.collection("documents").deleteOne({ _id: new ObjectId(id) });
+
+      return NextResponse.json({
+        success: true,
+        message: "Document permanently deleted",
+      });
+    } else {
       // Soft delete: mark as deleted (only if document belongs to user)
       const result = await db
         .collection("documents")
@@ -69,8 +101,6 @@ export async function DELETE(
         success: true,
         message: "Document moved to trash",
       });
-    } finally {
-      await client.close();
     }
   } catch (error) {
     console.error("DELETE_DOC_ERROR:", error);
@@ -99,64 +129,48 @@ export async function PATCH(
     const { id } = await context.params;
     const { action } = await req.json();
     
-    const { MongoClient } = await import("mongodb");
-    const uri = process.env.MONGODB_URI || "";
-
-    if (!uri) {
+    if (!ObjectId.isValid(id)) {
       return NextResponse.json(
-        { error: "MongoDB not configured" },
-        { status: 503 }
+        { error: "Invalid document ID" },
+        { status: 400 }
       );
     }
 
-    const client = new MongoClient(uri);
-    await client.connect();
+    const client = await clientPromise;
+    const db = client.db("knowledgehub");
 
-    try {
-      const db = client.db("knowledgehub");
+    if (action === "restore") {
+      // Only restore if document belongs to user
+      const result = await db
+        .collection("documents")
+        .updateOne(
+          { 
+            _id: new ObjectId(id),
+            userId: user.id  // Security: Only restore user's own documents
+          },
+          { 
+            $set: { deleted: false },
+            $unset: { deletedAt: "" }
+          }
+        );
 
-      if (!ObjectId.isValid(id)) {
+      if (result.matchedCount === 0) {
         return NextResponse.json(
-          { error: "Invalid document ID" },
-          { status: 400 }
+          { error: "Document not found or you don't have permission" },
+          { status: 404 }
         );
       }
 
-      if (action === "restore") {
-        // Only restore if document belongs to user
-        const result = await db
-          .collection("documents")
-          .updateOne(
-            { 
-              _id: new ObjectId(id),
-              userId: user.id  // Security: Only restore user's own documents
-            },
-            { 
-              $set: { deleted: false },
-              $unset: { deletedAt: "" }
-            }
-          );
-
-        if (result.matchedCount === 0) {
-          return NextResponse.json(
-            { error: "Document not found or you don't have permission" },
-            { status: 404 }
-          );
-        }
-
-        return NextResponse.json({
-          success: true,
-          message: "Document restored successfully",
-        });
-      }
-
-      return NextResponse.json(
-        { error: "Invalid action" },
-        { status: 400 }
-      );
-    } finally {
-      await client.close();
+      return NextResponse.json({
+        success: true,
+        message: "Document restored successfully",
+      });
     }
+
+    return NextResponse.json(
+      { error: "Invalid action" },
+      { status: 400 }
+    );
   } catch (error) {
     console.error("RESTORE_DOC_ERROR:", error);
     return NextResponse.json(
