@@ -12,7 +12,7 @@
     },
     "app/api/upload/route.ts": {
       "maxDuration": 10,
-      "memory": 3008
+      "memory": 1024
     },
     "app/api/qa/route.ts": {
       "maxDuration": 10,
