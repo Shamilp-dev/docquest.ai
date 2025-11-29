@@ -1180,7 +1180,7 @@ const [notificationCount, setNotificationCount] = useState(0);
               {/* Right Sidebar - Upload System */}
               <UploadSidebar
   showUploadPanel={showUploadPanel}
-  setShowUploadPanel={setShowUploadPanel}
+
   chosenFile={chosenFile}
   setChosenFile={setChosenFile}
   isUploading={isUploading}
