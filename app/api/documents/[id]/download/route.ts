@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get authenticated user
@@ -21,12 +21,23 @@ export async function GET(
       }, { status: 401 });
     }
 
+    // Await params (Next.js 15+ requirement)
+    const { id } = await context.params;
+
+    // Check if MongoDB is configured
+    if (!clientPromise) {
+      return NextResponse.json(
+        { success: false, error: "Database not configured" },
+        { status: 503 }
+      );
+    }
+
     // Get document metadata to find gridfsId
     const client = await clientPromise;
     const db = client.db("knowledgehub");
     
     const document = await db.collection("documents").findOne({
-      _id: new ObjectId(params.id),
+      _id: new ObjectId(id),
       deleted: false
     });
 
@@ -42,6 +53,14 @@ export async function GET(
       return NextResponse.json(
         { success: false, error: "Access denied" },
         { status: 403 }
+      );
+    }
+
+    // Check if document has gridfsId
+    if (!document.gridfsId) {
+      return NextResponse.json(
+        { success: false, error: "File not found in storage (legacy document)" },
+        { status: 404 }
       );
     }
 

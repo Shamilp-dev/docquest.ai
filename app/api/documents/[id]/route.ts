@@ -31,6 +31,14 @@ export async function DELETE(
       );
     }
 
+    // Check if MongoDB is configured
+    if (!clientPromise) {
+      return NextResponse.json(
+        { error: "Database not configured" },
+        { status: 503 }
+      );
+    }
+
     const client = await clientPromise;
     const db = client.db("knowledgehub");
 
@@ -133,6 +141,14 @@ export async function PATCH(
       return NextResponse.json(
         { error: "Invalid document ID" },
         { status: 400 }
+      );
+    }
+
+    // Check if MongoDB is configured
+    if (!clientPromise) {
+      return NextResponse.json(
+        { error: "Database not configured" },
+        { status: 503 }
       );
     }
 
