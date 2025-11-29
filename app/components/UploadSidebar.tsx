@@ -442,31 +442,8 @@ const UploadSidebar: React.FC<UploadSidebarProps> = ({
             </div>
           )}
 
-          {/* Upload Progress Panel - Fixed position to match success popup */}
-          {isUploading && (
-            <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 backdrop-blur-lg">
-              <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-4 min-w-[300px]">
-                <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center animate-pulse">
-                  <Loader2 className="w-10 h-10 text-white animate-spin" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Uploading...
-                </h3>
-                <p className="text-sm text-gray-600 text-center">
-                  {uploadProgress || "Processing your document"}
-                </p>
-                
-                {/* Progress bar */}
-                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-purple-600 to-blue-600 rounded-full animate-progress" />
-                </div>
-
-                <p className="text-xs text-gray-500 text-center">
-                  Please don't close this window
-                </p>
-              </div>
-            </div>
-          )}
+          {/* Upload Progress - REMOVED: Using main dashboard modal only */}
+          {/* The main dashboard upload modal handles the upload progress display */}
 
           {/* Selected File Details */}
           {selectedFile && !showUploadPanel && !isUploading && (
