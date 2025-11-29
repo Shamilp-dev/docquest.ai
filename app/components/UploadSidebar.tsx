@@ -33,7 +33,7 @@ type Analytics = {
 interface UploadSidebarProps {
   // Upload states
   showUploadPanel: boolean;
-  setShowUploadPanel: (show: boolean) => void;
+  setShowUploadPanel?: (show: boolean) => void; // Made optional
   chosenFile: File | null;
   setChosenFile: (file: File | null) => void;
   isUploading: boolean;
@@ -119,7 +119,7 @@ const UploadSidebar: React.FC<UploadSidebarProps> = ({
 
   const handleCancelUpload = () => {
     setChosenFile(null);
-    setShowUploadPanel(false);
+    if (setShowUploadPanel) setShowUploadPanel(false);
     setIsDragging(false);
   };
 
@@ -198,15 +198,17 @@ const UploadSidebar: React.FC<UploadSidebarProps> = ({
           {/* Initial State - Show Upload Button + Insights */}
           {!showUploadPanel && !isUploading && !selectedFile && (
             <>
-              <div className="flex gap-2 mb-6">
-                <button
-                  onClick={() => setShowUploadPanel(true)}
-                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium text-sm hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer group"
-                >
-                  <Upload className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                  Upload
-                </button>
-              </div>
+              {setShowUploadPanel && (
+                <div className="flex gap-2 mb-6">
+                  <button
+                    onClick={() => setShowUploadPanel(true)}
+                    className="flex-1 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium text-sm hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer group"
+                  >
+                    <Upload className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    Upload
+                  </button>
+                </div>
+              )}
 
               {/* AI Search Insights */}
               <div className="mb-6">
