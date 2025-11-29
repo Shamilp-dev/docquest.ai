@@ -886,7 +886,7 @@ const [notificationCount, setNotificationCount] = useState(0);
                     <div className="p-2">
                       <button 
                         onClick={() => setShowSettings(true)}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md flex items-center gap-2"
+                        className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md flex items-center gap-2 cursor-pointer"
                       >
                         <Settings className="w-4 h-4" />
                         Settings
@@ -1180,7 +1180,7 @@ const [notificationCount, setNotificationCount] = useState(0);
               {/* Right Sidebar - Upload System */}
               <UploadSidebar
   showUploadPanel={showUploadPanel}
-
+  setShowUploadPanel={setShowUploadPanel}
   chosenFile={chosenFile}
   setChosenFile={setChosenFile}
   isUploading={isUploading}

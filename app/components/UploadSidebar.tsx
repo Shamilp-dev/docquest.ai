@@ -295,7 +295,7 @@ const UploadSidebar: React.FC<UploadSidebarProps> = ({
                   onClick={handleCancelUpload}
                   className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <X className="w-5 h-5 text-gray-500" />
+                  <X className="w-5 h-5 text-gray-500 cursor-pointer" />
                 </button>
               </div>
 
@@ -344,13 +344,13 @@ const UploadSidebar: React.FC<UploadSidebarProps> = ({
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={handleCancelUpload}
-                  className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-300 transition-colors"
+                  className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-300 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={openFilePicker}
-                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium text-sm hover:shadow-lg transition-all"
+                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium text-sm hover:shadow-lg transition-all cursor-pointer"
                 >
                   Choose File
                 </button>
