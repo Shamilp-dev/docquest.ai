@@ -83,7 +83,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 - **Framework:** Next.js 14
 - **Database:** MongoDB with GridFS
-- **AI/ML:** OpenRouter Embeddings
+- **AI/ML:** OpenRouter + cohere Embeddings
 - **Styling:** Tailwind CSS
 - **Deployment:** Vercel
 

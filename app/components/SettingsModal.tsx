@@ -14,6 +14,7 @@ interface SettingsModalProps {
   };
   onClose: () => void;
   darkMode: boolean;
+  onProfileUpdate?: (updatedUser: { username: string; avatar: string }) => void;
 }
 
 type Section = 'profile' | 'security' | 'data';
@@ -27,7 +28,7 @@ const avatarOptions = [
   '/avatars/avatar6.png',
 ];
 
-export default function SettingsModal({ user, onClose, darkMode }: SettingsModalProps) {
+export default function SettingsModal({ user, onClose, darkMode, onProfileUpdate }: SettingsModalProps) {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<Section>('profile');
   const [loading, setLoading] = useState(false);
@@ -70,10 +71,10 @@ export default function SettingsModal({ user, onClose, darkMode }: SettingsModal
 
       showMessage('success', 'Profile updated successfully!');
       
-      // Refresh page to update all references
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      // Notify parent component to update the user state
+      if (onProfileUpdate) {
+        onProfileUpdate({ username, avatar: selectedAvatar });
+      }
     } catch (error: any) {
       showMessage('error', error.message);
     } finally {
@@ -178,12 +179,12 @@ export default function SettingsModal({ user, onClose, darkMode }: SettingsModal
         <label className={` block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-3`}>
           Choose Avatar
         </label>
-        <div className="grid grid-cols-6 gap-3 cursor-pointer">
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-3 justify-items-center">
           {avatarOptions.map((avatar) => (
             <button
               key={avatar}
               onClick={() => setSelectedAvatar(avatar)}
-              className={`relative w-16 h-16 rounded-full overflow-hidden border-2 transition-all cursor-pointer ${
+              className={`relative w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full overflow-hidden border-2 transition-all cursor-pointer ${
                 selectedAvatar === avatar
                   ? 'border-purple-600 ring-4 ring-purple-200 dark:ring-purple-900'
                   : darkMode ? 'border-gray-600 hover:border-gray-500' : 'border-gray-300 hover:border-purple-600'
@@ -244,23 +245,33 @@ export default function SettingsModal({ user, onClose, darkMode }: SettingsModal
         </p>
       </div>
 
-      <button
-        onClick={handleUpdateProfile}
-        disabled={loading}
-        className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
-      >
-        {loading ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Saving...
-          </>
-        ) : (
-          <>
-            <Check className="w-5 h-5 " />
-            Save Changes
-          </>
-        )}
-      </button>
+      <div className="flex gap-3">
+        <button
+          onClick={handleUpdateProfile}
+          disabled={loading}
+          className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Check className="w-5 h-5 " />
+              Save Changes
+            </>
+          )}
+        </button>
+        
+        {/* Mobile Logout Button */}
+        <button
+          onClick={() => setShowLogoutModal(true)}
+          className="md:hidden px-4 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <LogOut className="w-5 h-5" />
+        </button>
+      </div>
     </div>
   );
 
@@ -329,23 +340,33 @@ export default function SettingsModal({ user, onClose, darkMode }: SettingsModal
         />
       </div>
 
-      <button
-        onClick={handleChangePassword}
-        disabled={loading}
-        className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
-      >
-        {loading ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Changing Password...
-          </>
-        ) : (
-          <>
-            <Lock className="w-5 h-5" />
-            Change Password
-          </>
-        )}
-      </button>
+      <div className="flex gap-3">
+        <button
+          onClick={handleChangePassword}
+          disabled={loading}
+          className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Changing Password...
+            </>
+          ) : (
+            <>
+              <Lock className="w-5 h-5" />
+              Change Password
+            </>
+          )}
+        </button>
+        
+        {/* Mobile Logout Button */}
+        <button
+          onClick={() => setShowLogoutModal(true)}
+          className="md:hidden px-4 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <LogOut className="w-5 h-5" />
+        </button>
+      </div>
     </div>
   );
 
@@ -400,21 +421,21 @@ export default function SettingsModal({ user, onClose, darkMode }: SettingsModal
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className={`${
         darkMode ? 'bg-gray-900' : 'bg-white'
-      } rounded-2xl shadow-2xl w-full max-w-4xl h-[600px] flex overflow-hidden`}>
+      } rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] md:h-[600px] flex flex-col md:flex-row overflow-hidden`}>
         
         {/* Left Sidebar */}
-        <div className={`w-64 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} border-r flex flex-col`}>
-          <div className="p-6">
+        <div className={`w-full md:w-64 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} md:border-r border-b md:border-b-0 flex flex-col`}>
+          <div className="p-4 md:p-6">
             <h2 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
               Settings
             </h2>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-3 ">
+          <nav className="flex-1 px-3 flex md:flex-col gap-1 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0">
             <button
               onClick={() => setActiveSection('profile')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-colors cursor-pointer ${
+              className={`flex-shrink-0 md:w-full flex items-center gap-3 px-3 py-2.5 rounded-lg md:mb-1 transition-colors cursor-pointer ${
                 activeSection === 'profile'
                   ? darkMode
                     ? 'bg-purple-600 text-white'
@@ -430,7 +451,7 @@ export default function SettingsModal({ user, onClose, darkMode }: SettingsModal
 
             <button
               onClick={() => setActiveSection('security')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-colors cursor-pointer ${
+              className={`flex-shrink-0 md:w-full flex items-center gap-3 px-3 py-2.5 rounded-lg md:mb-1 transition-colors cursor-pointer ${
                 activeSection === 'security'
                   ? darkMode
                     ? 'bg-purple-600 text-white'
@@ -446,7 +467,7 @@ export default function SettingsModal({ user, onClose, darkMode }: SettingsModal
 
             <button
               onClick={() => setActiveSection('data')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-colors cursor-pointer ${
+              className={`flex-shrink-0 md:w-full flex items-center gap-3 px-3 py-2.5 rounded-lg md:mb-1 transition-colors cursor-pointer ${
                 activeSection === 'data'
                   ? darkMode
                     ? 'bg-purple-600 text-white'
@@ -462,7 +483,7 @@ export default function SettingsModal({ user, onClose, darkMode }: SettingsModal
           </nav>
 
           {/* Logout Button at Bottom */}
-          <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+          <div className="hidden md:block p-3 border-t border-gray-200 dark:border-gray-700">
             <button
               onClick={() => setShowLogoutModal(true)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
@@ -480,7 +501,7 @@ export default function SettingsModal({ user, onClose, darkMode }: SettingsModal
         {/* Right Content */}
         <div className="flex-1 flex flex-col">
           {/* Header */}
-          <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} flex items-center justify-between`}>
+          <div className={`px-4 md:px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} flex items-center justify-between`}>
             <div className="flex items-center gap-3">
   {/* Avatar */}
   <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
@@ -521,7 +542,7 @@ export default function SettingsModal({ user, onClose, darkMode }: SettingsModal
 
           {/* Message Banner */}
           {message && (
-            <div className={`mx-6 mt-4 p-4 rounded-lg border ${
+            <div className={`mx-4 md:mx-6 mt-4 p-4 rounded-lg border ${
               message.type === 'success'
                 ? darkMode
                   ? 'bg-green-900/20 border-green-800 text-green-400'
@@ -540,7 +561,7 @@ export default function SettingsModal({ user, onClose, darkMode }: SettingsModal
           )}
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6">
             {activeSection === 'profile' && renderProfileSection()}
             {activeSection === 'security' && renderSecuritySection()}
             {activeSection === 'data' && renderDataSection()}
