@@ -46,6 +46,8 @@ import {
   RefreshCw,
   Loader2,
   LogOut,
+  Copy,
+  Check,
 } from "lucide-react";
 
 type FileItem = {
@@ -125,6 +127,7 @@ const KnowledgeDashboard: React.FC<Props> = ({ user }) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [userAvatar, setUserAvatar] = useState(user.avatar || "");
   const [userName, setUserName] = useState(user.username);
+  const [copiedAnswer, setCopiedAnswer] = useState(false);
 
   // Sync avatar when user prop changes
   useEffect(() => {
@@ -371,6 +374,7 @@ const KnowledgeDashboard: React.FC<Props> = ({ user }) => {
 
     setIsAnswering(true);
     setQaAnswer(null);
+    setCopiedAnswer(false); // Reset copy state
     try {
       const res = await fetch("/api/qa", {
         method: "POST",
@@ -399,6 +403,18 @@ const KnowledgeDashboard: React.FC<Props> = ({ user }) => {
       );
     } finally {
       setIsAnswering(false);
+    }
+  };
+
+  const handleCopyAnswer = async () => {
+    if (!qaAnswer) return;
+    
+    try {
+      await navigator.clipboard.writeText(qaAnswer);
+      setCopiedAnswer(true);
+      setTimeout(() => setCopiedAnswer(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy:', error);
     }
   };
 
@@ -1158,16 +1174,30 @@ const KnowledgeDashboard: React.FC<Props> = ({ user }) => {
                           </h3>
                           <MarkdownAnswer content={qaAnswer} />
                         </div>
-                        <button
-                          onClick={() => {
-                            setQaAnswer(null);
-                            setSearchResults([]);
-                            setSearchQuery("");
-                          }}
-                          className="flex-shrink-0"
-                        >
-                          <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-                        </button>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button
+                            onClick={handleCopyAnswer}
+                            className="p-2 hover:bg-purple-100 rounded-lg transition-colors cursor-pointer"
+                            title={copiedAnswer ? "Copied!" : "Copy answer"}
+                          >
+                            {copiedAnswer ? (
+                              <Check className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <Copy className="w-4 h-4 text-gray-600 hover:text-gray-900" />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setQaAnswer(null);
+                              setSearchResults([]);
+                              setSearchQuery("");
+                            }}
+                            className="p-2 hover:bg-purple-100 rounded-lg transition-colors cursor-pointer"
+                            title="Close"
+                          >
+                            <X className="w-4 h-4 text-gray-600 hover:text-gray-900" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

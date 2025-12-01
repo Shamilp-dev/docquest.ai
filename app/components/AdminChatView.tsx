@@ -130,10 +130,12 @@ export default function AdminChatView({ onClose, initialChatId }: { onClose: () 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[700px] flex mx-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-full md:h-[700px] flex flex-col md:flex-row overflow-hidden">
         {/* Chat List Sidebar */}
-        <div className="w-80 border-r border-gray-200 flex flex-col">
+        <div className={`w-full md:w-80 border-r border-gray-200 flex flex-col ${
+          selectedChat ? 'hidden md:flex' : 'flex'
+        }`}>
           {/* Header */}
           <div className="px-4 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between mb-3">
@@ -209,11 +211,23 @@ export default function AdminChatView({ onClose, initialChatId }: { onClose: () 
         </div>
 
         {/* Chat Area */}
-        <div className="flex-1 flex flex-col">
+        <div className={`flex-1 flex flex-col ${
+          selectedChat ? 'flex' : 'hidden md:flex'
+        }`}>
           {selectedChat ? (
             <>
               {/* Chat Header */}
-              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <div className="px-4 md:px-6 py-4 border-b border-gray-200 bg-gray-50">
+                {/* Mobile Back Button */}
+                <button
+                  onClick={() => setSelectedChat(null)}
+                  className="md:hidden mb-3 text-purple-600 text-sm font-medium flex items-center gap-1 hover:text-purple-700"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back to chats
+                </button>
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
@@ -239,14 +253,14 @@ export default function AdminChatView({ onClose, initialChatId }: { onClose: () 
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
                 {selectedChat.messages.map((msg) => (
                   <div
                     key={msg.id}
                     className={`flex ${msg.sender === 'admin' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[70%] ${
+                      className={`max-w-[85%] md:max-w-[70%] ${
                         msg.sender === 'admin'
                           ? 'bg-purple-600 text-white'
                           : 'bg-gray-100 text-gray-900'
@@ -269,7 +283,7 @@ export default function AdminChatView({ onClose, initialChatId }: { onClose: () 
               </div>
 
               {/* Input */}
-              <div className="px-6 py-4 border-t border-gray-200">
+              <div className="px-4 md:px-6 py-4 border-t border-gray-200">
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
@@ -277,14 +291,14 @@ export default function AdminChatView({ onClose, initialChatId }: { onClose: () 
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                     placeholder="Type your reply..."
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                    className="flex-1 px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                   />
                   <button
                     onClick={handleSendMessage}
                     disabled={loading || !newMessage.trim()}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 md:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                   >
-                    <Send className="w-5 h-5" />
+                    <Send className="w-4 h-4 md:w-5 md:h-5" />
                   </button>
                 </div>
               </div>

@@ -29,6 +29,7 @@ export default function AdminHeader({ darkMode, onToggleDarkMode, onNotification
   const [totalUnread, setTotalUnread] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -70,6 +71,11 @@ export default function AdminHeader({ darkMode, onToggleDarkMode, onNotification
   const handleNotificationClick = (notification: Notification) => {
     setShowNotifications(false);
     onNotificationClick(notification.chatId, notification.userId);
+  };
+
+  const handleLogoutClick = () => {
+    setShowUserMenu(false);
+    setShowLogoutConfirm(true);
   };
 
   const handleLogout = async () => {
@@ -240,11 +246,11 @@ export default function AdminHeader({ darkMode, onToggleDarkMode, onNotification
                   </p>
                 </div>
                 <button
-                  onClick={handleLogout}
+                  onClick={handleLogoutClick}
                   className={`w-full px-4 py-2 text-left flex items-center gap-2 ${
                     darkMode 
-                      ? 'hover:bg-gray-700 text-gray-300' 
-                      : 'hover:bg-gray-50 text-gray-700'
+                      ? 'hover:bg-gray-700 text-red-400' 
+                      : 'hover:bg-red-50 text-red-600'
                   } transition-colors text-sm`}
                 >
                   <LogOut className="w-4 h-4" />
@@ -255,6 +261,45 @@ export default function AdminHeader({ darkMode, onToggleDarkMode, onNotification
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200`}>
+            <div className="flex items-start gap-4 mb-4">
+              <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                <LogOut className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className={`text-lg font-semibold mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Confirm Logout
+                </h3>
+                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Are you sure you want to logout from the admin dashboard?
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  darkMode
+                    ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

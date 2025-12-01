@@ -5,20 +5,16 @@ import { expandQuery, extractKeywords } from "../utils/queryProcessor";
 import { trackSearchQuery } from "@/lib/models/analytics";
 import { Document as MongoDocument } from "mongodb";
 import { SearchResultDocument } from "@/types/DocumentTypes";
-import OpenAI from "openai";
+import Groq from "groq-sdk";
 import { requireAuth } from "@/lib/auth";
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const client = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY!,
-  baseURL: "https://openrouter.ai/api/v1",
-  defaultHeaders: {
-    "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-    "X-Title": "KnowledgeHub",
-  },
+// Initialize Groq client for LLM
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY || "",
 });
 
 // OPTIMIZATION: Simple in-memory cache for frequent queries
@@ -83,10 +79,29 @@ function extractRelevantContext(text: string, keywords: string[], maxLength: num
 }
 
 /**
+ * NEW: Detect if query requires calculations
+ */
+function requiresCalculation(query: string): boolean {
+  const lowerQuery = query.toLowerCase();
+  const calcKeywords = [
+    'profit', 'loss', 'calculate', 'total', 'sum', 'difference', 'subtract',
+    'add', 'multiply', 'divide', 'percentage', 'ratio', 'average', 'mean',
+    'revenue minus', 'expenses from', 'how much', 'what is the'
+  ];
+  
+  return calcKeywords.some(keyword => lowerQuery.includes(keyword));
+}
+
+/**
  * OPTIMIZATION: Detect query type to optimize response
  */
-function detectQueryType(query: string): 'specific' | 'summary' | 'list' {
+function detectQueryType(query: string): 'specific' | 'summary' | 'list' | 'calculation' {
   const lowerQuery = query.toLowerCase();
+  
+  // NEW: Calculation queries
+  if (requiresCalculation(query)) {
+    return 'calculation';
+  }
   
   // Specific information queries (who, what specific thing, which one)
   if (lowerQuery.match(/\b(who|whose|which person|what is the name|prepared by|created by|author)\b/)) {
@@ -114,10 +129,17 @@ export async function POST(req: Request) {
       }, { status: 401 });
     }
 
-    const { query, topK = 3, useExpansion = true } = await req.json(); // OPTIMIZATION: Reduced default topK from 5 to 3
+    const { query, topK = 3, useExpansion = true } = await req.json();
 
     if (!query?.trim()) {
       return NextResponse.json({ error: "Query is required" }, { status: 400 });
+    }
+
+    // Check if Groq is configured
+    if (!process.env.GROQ_API_KEY) {
+      return NextResponse.json({
+        error: "AI service not configured. Please contact administrator."
+      }, { status: 503 });
     }
 
     // OPTIMIZATION: Check cache first
@@ -136,11 +158,11 @@ export async function POST(req: Request) {
     const clientDB = (await clientPromise)!;
     const db = clientDB.db("knowledgehub");
 
-    // OPTIMIZATION: Detect query type for targeted processing
+    // Detect query type for targeted processing
     const queryType = detectQueryType(query);
     console.log("Query type detected:", queryType);
 
-    // OPTIMIZATION: Skip expansion for specific queries to save time
+    // Skip expansion for specific queries to save time
     let searchQuery = query;
     if (useExpansion && queryType !== 'specific') {
       try {
@@ -160,7 +182,7 @@ export async function POST(req: Request) {
     const keywords = extractKeywords(query);
     console.log("Extracted keywords:", keywords);
 
-    // OPTIMIZATION: Parallel search with Promise.all
+    // Parallel search with Promise.all
     let vectorDocs: MongoDocument[] = [];
     let keywordDocs: MongoDocument[] = [];
 
@@ -180,7 +202,7 @@ export async function POST(req: Request) {
               index: "vector_index",
               path: "embedding",
               queryVector: embedding,
-              numCandidates: 50, // OPTIMIZATION: Reduced from 100
+              numCandidates: 50,
               limit: topK * 2,
             },
           },
@@ -271,79 +293,88 @@ export async function POST(req: Request) {
       score: typeof doc.score === "number" ? doc.score : undefined,
     }));
 
-    // OPTIMIZATION: Smart context extraction based on query type and keywords
+    // Smart context extraction based on query type and keywords
     let context = "";
-    const maxContextPerDoc = queryType === 'specific' ? 1500 : 3000; // Less context for specific queries
+    const maxContextPerDoc = queryType === 'specific' ? 1500 : 3000;
     
     for (const doc of serializedDocs) {
       const docHeader = `=== ${doc.filename || "Unknown"} ===\n`;
       const docContent = doc.extractedText || "";
       
-      // OPTIMIZATION: Extract only relevant portions
       const relevantContent = extractRelevantContext(docContent, keywords, maxContextPerDoc);
       const docContext = docHeader + relevantContent + "\n\n";
       
       context += docContext;
       
-      // OPTIMIZATION: Strict limit on total context
-      if (context.length > 8000) break; // Reduced from 12000
+      if (context.length > 8000) break;
     }
 
     console.log("Context length:", context.length);
 
-    // OPTIMIZATION: Tailored system prompt based on query type
-    const systemPrompt = queryType === 'specific'
-      ? `You are a precise information extraction assistant. Answer with ONLY the specific information requested.
+    // NEW: Enhanced system prompt with calculation capabilities
+    const systemPrompt = queryType === 'calculation'
+      ? `You are a highly intelligent financial and data analysis assistant with strong mathematical capabilities.
+
+CALCULATION RULES:
+- Extract all relevant numbers from the documents
+- Perform accurate calculations (addition, subtraction, multiplication, division, percentages)
+- Show your work: explain which numbers you used and how you calculated
+- Format numbers clearly with currency symbols or units when appropriate
+- If data is missing, clearly state what's needed
+
+ANSWER FORMAT:
+**Answer:** [Clear final result with units/currency]
+
+**Calculation:**
+- Found: [list the numbers and their sources]
+- Formula: [show the calculation]
+- Result: [final answer]
+
+**Source:** *[document name]*
+
+Be precise and accurate. Always double-check your math.`
+      
+      : queryType === 'specific'
+        ? `You are a precise information extraction assistant. Answer with ONLY the specific information requested.
 
 CRITICAL RULES:
 - Be extremely concise and direct
 - Answer in 1-2 sentences maximum for specific queries
 - Use **bold** for the key answer
 - No unnecessary details or summaries
-- If asking "who", give the name directly
-- If asking "what", give the thing directly
-- Format: **[Answer]** from *[document]*
 
-Example:
-User: "Who prepared the document?"
-You: **John Smith, Business Analyst** prepared the document as mentioned in *Report.pdf*`
-      
-      : `You are a knowledgeable assistant providing clear, structured answers.
+**[Answer]** from *[document]*`
+        
+        : `You are a knowledgeable assistant providing clear, structured answers.
 
 FORMATTING RULES:
 - Use **bold** for key information
 - Use bullet points for lists
 - Be concise but complete
-- Add markdown formatting for readability
-
-CONTENT RULES:
-- Answer ONLY from provided documents
-- Be direct and avoid unnecessary elaboration
-- Cite document names in italics
 
 **Summary:** [1-2 sentence overview]
 
 **Key Points:**
-• First point with **emphasis**
-• Second point
-• Third point
+• Point with **emphasis**
 
 **Source:** *[document name]*`;
 
-    const userPrompt = queryType === 'specific'
-      ? `QUESTION: ${query}\n\nDOCUMENTS:\n${context}\n\nAnswer directly and concisely.`
-      : `QUESTION: ${query}\n\nDOCUMENTS:\n${context}\n\nProvide a clear, well-structured answer.`;
+    const userPrompt = queryType === 'calculation'
+      ? `QUESTION: ${query}\n\nDOCUMENTS:\n${context}\n\nExtract relevant numbers, perform the calculation, and provide a clear answer with your working.`
+      : queryType === 'specific'
+        ? `QUESTION: ${query}\n\nDOCUMENTS:\n${context}\n\nAnswer directly and concisely.`
+        : `QUESTION: ${query}\n\nDOCUMENTS:\n${context}\n\nProvide a clear, well-structured answer.`;
 
-    // OPTIMIZATION: Reduced max_tokens for faster responses
-    const maxTokens = queryType === 'specific' ? 150 : 400;
+    const maxTokens = queryType === 'calculation' ? 500 : (queryType === 'specific' ? 150 : 400);
 
-    const llm = await client.chat.completions.create({
-      model: "meta-llama/llama-3.1-8b-instruct",
+    // Use Groq with Llama-3.3-70b for better reasoning and calculations
+    const llm = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      temperature: 0.1, // Lower temperature for more focused responses
+      temperature: queryType === 'calculation' ? 0.1 : 0.3, // Very low for calculations
       max_tokens: maxTokens,
     });
 
@@ -351,14 +382,14 @@ CONTENT RULES:
 
     const responseTime = (Date.now() - startTime) / 1000;
     
-    // OPTIMIZATION: Cache the result
+    // Cache the result
     queryCache.set(cacheKey, {
       answer,
       timestamp: Date.now(),
       results: serializedDocs
     });
 
-    // Clean old cache entries (simple cleanup)
+    // Clean old cache entries
     if (queryCache.size > 100) {
       const now = Date.now();
       for (const [key, value] of queryCache.entries()) {
@@ -370,13 +401,14 @@ CONTENT RULES:
 
     await trackSearchQuery(clientDB, query, responseTime, user.id);
 
-    console.log(`Query processed in ${responseTime.toFixed(2)}s (${queryType} type)`);
+    console.log(`Query processed in ${responseTime.toFixed(2)}s (${queryType} type) with Groq`);
 
     return NextResponse.json({
       answer,
       results: serializedDocs,
       responseTime,
       queryType,
+      llmProvider: "groq",
       debug: {
         vectorResults: vectorDocs.length,
         keywordResults: keywordDocs.length,
