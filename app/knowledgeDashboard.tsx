@@ -93,7 +93,64 @@ const KnowledgeDashboard: React.FC<Props> = ({ user }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
+  const [insightsPanelY, setInsightsPanelY] = useState(0);
+  const [isDraggingPanel, setIsDraggingPanel] = useState(false);
+  const [isInsightsPanelAnimating, setIsInsightsPanelAnimating] = useState(false);
+  const insightsPanelRef = useRef<HTMLDivElement>(null);
+  const touchStartY = useRef(0);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Handle touch gestures for insights panel
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const target = e.target as HTMLElement;
+    // Check if scrollable content is at the top
+    const scrollableContent = insightsPanelRef.current?.querySelector('[data-scrollable]');
+    const isAtTop = !scrollableContent || scrollableContent.scrollTop === 0;
+    
+    if (isAtTop) {
+      touchStartY.current = e.touches[0].clientY;
+      setIsDraggingPanel(true);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDraggingPanel) return;
+    const currentY = e.touches[0].clientY;
+    const deltaY = currentY - touchStartY.current;
+    
+    // Only allow dragging down
+    if (deltaY > 0) {
+      setInsightsPanelY(deltaY);
+      // Prevent scrolling when dragging
+      e.preventDefault();
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDraggingPanel(false);
+    
+    // If dragged more than 100px, dismiss the panel
+    if (insightsPanelY > 100) {
+      setShowInsights(false);
+      setInsightsPanelY(0);
+    } else {
+      // Snap back to original position
+      setInsightsPanelY(0);
+    }
+  };
+
+  // Reset panel position when it's closed
+  useEffect(() => {
+    if (!showInsights) {
+      setInsightsPanelY(0);
+      setIsInsightsPanelAnimating(false);
+    } else {
+      // Trigger animation when opening
+      setIsInsightsPanelAnimating(true);
+      setTimeout(() => setIsInsightsPanelAnimating(false), 300);
+    }
+  }, [showInsights]);
+
   //chatmodal
   const [showChat, setShowChat] = useState(false);
   //right sidebar
@@ -705,6 +762,15 @@ const KnowledgeDashboard: React.FC<Props> = ({ user }) => {
         
         .animate-slide-up {
           animation: slide-up 0.3s ease-out forwards;
+        }
+        
+        @keyframes pulse-handle {
+          0%, 100% { transform: scaleX(1); }
+          50% { transform: scaleX(1.2); }
+        }
+        
+        .animate-pulse-handle {
+          animation: pulse-handle 2s ease-in-out infinite;
         }
         
         @keyframes thinking-dots {
@@ -1561,12 +1627,28 @@ const KnowledgeDashboard: React.FC<Props> = ({ user }) => {
               className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               onClick={() => setShowInsights(false)}
             />
-            <div className="absolute left-0 right-0 bottom-0 bg-white shadow-xl overflow-y-auto rounded-t-3xl max-h-[85vh] animate-slide-up">
+            <div 
+              ref={insightsPanelRef}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              className={`absolute left-0 right-0 bottom-0 bg-white shadow-xl overflow-y-auto rounded-t-3xl max-h-[85vh] ${
+                isInsightsPanelAnimating ? 'animate-slide-up' : ''
+              }`}
+              style={{
+                transform: `translateY(${insightsPanelY}px)`,
+                transition: isDraggingPanel ? 'none' : isInsightsPanelAnimating ? 'none' : 'transform 0.3s ease-out',
+                opacity: isDraggingPanel ? Math.max(0.5, 1 - insightsPanelY / 300) : 1
+              }}
+            >
               {/* Drag Handle */}
-              <div className="flex justify-center pt-3 pb-2">
-                <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+              <div 
+                className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing"
+                onTouchStart={handleTouchStart}
+              >
+                <div className="w-12 h-1.5 bg-gray-300 rounded-full animate-pulse-handle"></div>
               </div>
-              <div className="px-6 pb-6">
+              <div className="px-6 pb-6" data-scrollable>
                 <div className="flex items-center justify-between mb-6 pt-2">
                   <h3 className="text-lg font-semibold text-gray-900">
                     AI Search Insights
