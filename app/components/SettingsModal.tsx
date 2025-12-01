@@ -164,7 +164,7 @@ export default function SettingsModal({ user, onClose, darkMode, onProfileUpdate
   };
 
   const renderProfileSection = () => (
-    <div className="space-y-4 md:space-y-6">
+    <div className="space-y-3 md:space-y-6">
       <div>
         <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-1`}>
           Profile Settings
@@ -176,7 +176,7 @@ export default function SettingsModal({ user, onClose, darkMode, onProfileUpdate
 
       {/* Avatar Selection */}
       <div>
-        <label className={` block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-3`}>
+        <label className={` block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
           Choose Avatar
         </label>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3 justify-items-center">
@@ -184,7 +184,7 @@ export default function SettingsModal({ user, onClose, darkMode, onProfileUpdate
             <button
               key={avatar}
               onClick={() => setSelectedAvatar(avatar)}
-              className={`relative w-14 h-14 md:w-16 md:h-16 rounded-full overflow-hidden border-2 transition-all cursor-pointer ${
+              className={`relative w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden border-2 transition-all cursor-pointer ${
                 selectedAvatar === avatar
                   ? 'border-purple-600 ring-4 ring-purple-200 dark:ring-purple-900'
                   : darkMode ? 'border-gray-600 hover:border-gray-500' : 'border-gray-300 hover:border-purple-600'
@@ -561,7 +561,7 @@ export default function SettingsModal({ user, onClose, darkMode, onProfileUpdate
           )}
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-6">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-8">
             {activeSection === 'profile' && renderProfileSection()}
             {activeSection === 'security' && renderSecuritySection()}
             {activeSection === 'data' && renderDataSection()}
