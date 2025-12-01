@@ -24,8 +24,6 @@ const avatarOptions = [
   '/avatars/avatar2.png',
   '/avatars/avatar3.png',
   '/avatars/avatar4.png',
-  '/avatars/avatar5.png',
-  '/avatars/avatar6.png',
 ];
 
 export default function SettingsModal({ user, onClose, darkMode, onProfileUpdate }: SettingsModalProps) {
@@ -179,12 +177,12 @@ export default function SettingsModal({ user, onClose, darkMode, onProfileUpdate
         <label className={` block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
           Choose Avatar
         </label>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3 justify-items-center">
+        <div className="grid grid-cols-4 gap-3 md:gap-4 justify-items-center max-w-md mx-auto">
           {avatarOptions.map((avatar) => (
             <button
               key={avatar}
               onClick={() => setSelectedAvatar(avatar)}
-              className={`relative w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden border-2 transition-all cursor-pointer ${
+              className={`relative w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 transition-all cursor-pointer ${
                 selectedAvatar === avatar
                   ? 'border-purple-600 ring-4 ring-purple-200 dark:ring-purple-900'
                   : darkMode ? 'border-gray-600 hover:border-gray-500' : 'border-gray-300 hover:border-purple-600'
