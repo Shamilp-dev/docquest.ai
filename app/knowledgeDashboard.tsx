@@ -692,6 +692,21 @@ const KnowledgeDashboard: React.FC<Props> = ({ user }) => {
           .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         }
         
+        @keyframes slide-up {
+          from {
+            transform: translateY(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out forwards;
+        }
+        
         @keyframes thinking-dots {
           0%, 20% { content: '.'; }
           40% { content: '..'; }
@@ -1543,12 +1558,16 @@ const KnowledgeDashboard: React.FC<Props> = ({ user }) => {
         {showInsights && (
           <div className="fixed inset-0 z-50 lg:hidden">
             <div
-              className="absolute inset-0 bg-black/50"
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               onClick={() => setShowInsights(false)}
             />
-            <div className="absolute right-0 top-0 bottom-0 w-80 bg-white shadow-xl overflow-y-auto">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
+            <div className="absolute left-0 right-0 bottom-0 bg-white shadow-xl overflow-y-auto rounded-t-3xl max-h-[85vh] animate-slide-up">
+              {/* Drag Handle */}
+              <div className="flex justify-center pt-3 pb-2">
+                <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+              </div>
+              <div className="px-6 pb-6">
+                <div className="flex items-center justify-between mb-6 pt-2">
                   <h3 className="text-lg font-semibold text-gray-900">
                     AI Search Insights
                   </h3>
@@ -1603,14 +1622,14 @@ const KnowledgeDashboard: React.FC<Props> = ({ user }) => {
                     </div>
                     <div className="space-y-3">
                       {analytics.topSearches.map((search, idx) => (
-                        <div key={idx} className="flex items-center gap-3">
-                          <div className="flex-1">
-                            <div className="text-sm text-gray-900 mb-1 truncate">
+                        <div key={idx} className="flex items-start gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm text-gray-900 mb-1.5 break-words">
                               {search.query}
                             </div>
                             <div className="w-full bg-gray-100 rounded-full h-1.5">
                               <div
-                                className="bg-gradient-to-r from-purple-600 to-blue-600 h-1.5 rounded-full"
+                                className="bg-gradient-to-r from-purple-600 to-blue-600 h-1.5 rounded-full transition-all duration-300"
                                 style={{
                                   width: `${Math.min(
                                     (search.count /
@@ -1622,7 +1641,7 @@ const KnowledgeDashboard: React.FC<Props> = ({ user }) => {
                               ></div>
                             </div>
                           </div>
-                          <span className="text-xs font-medium text-gray-500">
+                          <span className="text-xs font-medium text-gray-500 flex-shrink-0 mt-0.5">
                             {search.count}
                           </span>
                         </div>
