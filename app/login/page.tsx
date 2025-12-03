@@ -396,6 +396,7 @@ setTimeout(() => {
           font-weight: 400;
           font-style: normal;
           font-display: swap;
+          font-display: fallback;
         }
       `}</style>
 
@@ -439,7 +440,9 @@ setTimeout(() => {
 
         <main
   className={`
-    flex-1 flex items-center justify-center px-6 py-0 h-screen
+    flex-1 flex items-center justify-center 
+    px-4 sm:px-6 py-8 sm:py-0 
+    min-h-screen h-auto sm:h-screen
     transition-all duration-700 ease-in-out
     ${collapseAnim ? "lg:w-full" : "lg:w-1/2"}
   `}
@@ -448,9 +451,9 @@ setTimeout(() => {
 
 
 
-         <div className="w-full h-full flex items-center justify-center">
+         <div className="w-full h-full flex items-center justify-center py-8 sm:py-0">
 
-  <div className="w-full max-w-md">
+  <div className="w-full max-w-md px-4 sm:px-0">
 
 
             {showSignupSuccess && (
@@ -487,7 +490,9 @@ setTimeout(() => {
 
             <div
   className={`
-    bg-white rounded-2xl p-8 flex flex-col justify-center
+    bg-white rounded-2xl p-6 sm:p-8 
+    flex flex-col justify-center
+     sm:shadow-none
     transition-all duration-500
     ${fadeOutLogin ? "opacity-0 scale-95" : "opacity-100 scale-100"}
   `}
@@ -497,13 +502,17 @@ setTimeout(() => {
               <div className="text-center">
 
                 <h1
-                  className="text-4xl font-bold mb-8 text-center"
-                  style={{ fontFamily: "Ruigslay", letterSpacing: "1px" }}
+                  className="text-3xl sm:text-4xl font-bold mb-6 sm:mb-8 text-center"
+                  style={{ 
+                    fontFamily: "Ruigslay, system-ui, -apple-system, sans-serif", 
+                    letterSpacing: "0.5px",
+                    WebkitFontSmoothing: "antialiased"
+                  }}
                 >
                   docQuest.ai
                 </h1>
 
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 mb-6">
                   {mode === "login"
                     ? "Please sign in to continue"
                     : mode === "signup"
@@ -512,7 +521,7 @@ setTimeout(() => {
                 </p>
               </div>
 
-             <div className="space-y-4">
+             <div className="space-y-4 mt-6 sm:mt-8">
 
 
                 {mode !== "forgot" ? (

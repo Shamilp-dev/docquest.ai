@@ -137,8 +137,19 @@ export async function POST(req: Request) {
 
     // Check if Groq is configured
     if (!process.env.GROQ_API_KEY) {
+      console.error("GROQ_API_KEY is not set in environment variables");
       return NextResponse.json({
-        error: "AI service not configured. Please contact administrator."
+        error: "AI service not configured. Please contact administrator.",
+        details: "GROQ_API_KEY environment variable is missing"
+      }, { status: 503 });
+    }
+
+    // Verify Groq client initialization
+    if (!groq) {
+      console.error("Groq client failed to initialize");
+      return NextResponse.json({
+        error: "AI service initialization failed. Please contact administrator.",
+        details: "Groq SDK failed to initialize"
       }, { status: 503 });
     }
 
@@ -368,15 +379,25 @@ FORMATTING RULES:
     const maxTokens = queryType === 'calculation' ? 500 : (queryType === 'specific' ? 150 : 400);
 
     // Use Groq with Llama-3.3-70b for better reasoning and calculations
-    const llm = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      temperature: queryType === 'calculation' ? 0.1 : 0.3, // Very low for calculations
-      max_tokens: maxTokens,
-    });
+    let llm;
+    try {
+      llm = await groq.chat.completions.create({
+        model: "llama-3.3-70b-versatile",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        temperature: queryType === 'calculation' ? 0.1 : 0.3, // Very low for calculations
+        max_tokens: maxTokens,
+      });
+    } catch (groqError: any) {
+      console.error("Groq API call failed:", groqError);
+      return NextResponse.json({
+        error: "AI service is unavailable. Please try again later.",
+        details: groqError.message || "Groq API call failed",
+        statusCode: groqError.status || 503
+      }, { status: 503 });
+    }
 
     const answer = llm.choices[0]?.message?.content ?? "I was unable to generate an answer.";
 
